@@ -16,6 +16,7 @@ async function writeToFile(filename, data) {
 const api = {
   listJobs: () => '/api/json',
   getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,id,result]`,
+  singleWfRun: ({ jobName }) => `/job/${jobName}/8/wfapi/describe`,
 }
 
 class Jenkins {
@@ -52,6 +53,13 @@ class Jenkins {
     const result = await this.getResource({ url })
     return result
   }
+
+  async singleWfRun() {
+    const url = api.singleWfRun(...arguments)
+
+    const result = await this.getResource({ url })
+    return result
+  }
 }
 
 async function test() {
@@ -59,9 +67,9 @@ async function test() {
 
   try {
     const jobs = await jenkins.listJobs()
-    const job = jobs.data.jobs[0]
+    const wfJob = jobs.data.jobs.filter((jb) => jb._class === 'org.jenkinsci.plugins.workflow.job.WorkflowJob')[0]
 
-    const buildStatus = await jenkins.getBuildStatus({ jobName: job.name })
+    const buildStatus = await jenkins.singleWfRun({ jobName: wfJob.name })
     console.log(buildStatus.data)
   }
   catch (e) {
