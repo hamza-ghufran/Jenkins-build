@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/hamza-ghufran/jenkins-build/issues"
   },
-  "homepage": "https://github.com/hamza-ghufran/jenkins-build#readme"
+  "homepage": "https://github.com/hamza-ghufran/jenkins-build#readme",
+  "dependencies": {
+    "axios": "^0.26.1",
+    "dotenv": "^16.0.0",
+    "node-fetch": "^3.2.3"
+  }
 }
