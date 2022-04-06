@@ -15,14 +15,15 @@ async function writeToFile(filename, data) {
 
 const api = {
   listJobs: () => '/api/json',
-  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,id,result]`,
+  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,duration,id,result]`,
   singleWfRun: ({ jobName }) => `/job/${jobName}/8/wfapi/describe`,
+  readJob: ({ jobName }) => `/job/${jobName}/config.xml`
 }
 
 class Jenkins {
   constructor() {
     this.https = axios
-    this.auth = tokenValue
+    this.token = tokenValue
   }
 
   async getResource(params) {
@@ -31,11 +32,11 @@ class Jenkins {
     const config = {
       auth: {
         username: USER_NAME,
-        password: this.auth
+        password: this.token
       }
     }
 
-    const resp = await axios.get(url, config)
+    const resp = await this.https.get(url, config)
 
     return resp
   }
@@ -60,17 +61,27 @@ class Jenkins {
     const result = await this.getResource({ url })
     return result
   }
+
+  async readJob() {
+    const url = api.readJob(...arguments)
+
+    const result = await this.getResource({ url })
+    return result
+  }
 }
 
 async function test() {
   const jenkins = new Jenkins()
 
+  const isWorkflow = 'org.jenkinsci.plugins.workflow.job.WorkflowJob'
+
   try {
     const jobs = await jenkins.listJobs()
-    const wfJob = jobs.data.jobs.filter((jb) => jb._class === 'org.jenkinsci.plugins.workflow.job.WorkflowJob')[0]
+    const job = jobs.data.jobs.filter((jb) => jb._class === isWorkflow)[0]
+    // const job = jobs.data.jobs[0]
 
-    const buildStatus = await jenkins.singleWfRun({ jobName: wfJob.name })
-    console.log(buildStatus.data)
+    const readJob = await jenkins.readJob({ jobName: job.name })
+    console.log(readJob.data)
   }
   catch (e) {
     throw e
