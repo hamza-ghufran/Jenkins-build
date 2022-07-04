@@ -9,14 +9,18 @@ const tokenValue = process.env.tokenValue
 
 axios.defaults.baseURL = BASE_URL;
 
-async function writeToFile(filename, data) {
-  await fs.writeFile(filename, data);
+function writeToFile(filename, data) {
+  fs.writeFileSync(filename, JSON.stringify(data));
 }
+
+// GET Pipeline job run History.
+// {jenkins_url}/job/TEST/wfapi/runs
 
 const api = {
   listJobs: () => '/api/json',
-  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,duration,id,result]`,
-  singleWfRun: ({ jobName }) => `/job/${jobName}/8/wfapi/describe`,
+  // getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,duration,id,result]`,
+  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?depth=4&pretty=true`,
+  singleWfRun: ({ jobName, jobId }) => `/job/${jobName}/${jobId}/wfapi/describe`,
   readJob: ({ jobName }) => `/job/${jobName}/config.xml`
 }
 
@@ -80,14 +84,18 @@ async function test() {
     const job = jobs.data.jobs.filter((jb) => jb._class === isWorkflow)[0]
     // const job = jobs.data.jobs[0]
 
-    const readJob = await jenkins.readJob({ jobName: job.name })
-    console.log(readJob.data)
+    const jobConfig = await jenkins.readJob({ jobName: job.name })
+    const singleWfRun = await jenkins.singleWfRun({ jobName: job.name, jobId: 7 })
+    const getBuildStatus = await jenkins.getBuildStatus({ jobName: job.name })
+    // console.log(JSON.stringify(jobs.data))
+    // console.log(JSON.stringify(job))
+    // console.log(JSON.stringify(jobConfig.data))
+    console.log((getBuildStatus.data))
+    // console.log(JSON.stringify(singleWfRun.data))
   }
   catch (e) {
     throw e
   }
-  // await writeToFile('listJobs', resp.data)
-  // await writeToFile('getBuildStatus', resp.data)
 }
 
 test().catch((e) => console.log(e))

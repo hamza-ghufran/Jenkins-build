@@ -28,7 +28,12 @@ async function getCrumb() {
     console.log(e);
   }
 }
-
+/**
+ * 
+ * @param {*} params 
+ * @param {object} params.crumbIssuer 
+ * @returns 
+ */
 async function generateToken(params) {
   const { crumbIssuer } = params
 
@@ -50,6 +55,13 @@ async function generateToken(params) {
       },
     });
 
+    /**
+     * headers: {
+     *  Cookie: "JSESSIONID.xyz.node0; Path=/; Secure; HttpOnly",
+     *  string-string: "string"
+     * }
+     */
+
     return res.data
   } catch (e) {
     console.log(e)
@@ -58,9 +70,21 @@ async function generateToken(params) {
 
 async function init() {
   const crumbIssuer = await getCrumb()
+  /**
+   *  
+   * 
+   * headers: {
+      'set-cookie': [
+        'JSESSIONID.xyz.node0; Path=/; Secure; HttpOnly'
+      ],
+    },
+   * data: {
+      _class: 'hudson.security.csrf.DefaultCrumbIssuer',
+      crumb: 'string',
+      crumbRequestField: 'string-string'
+    }
+   */
   const token = await generateToken({ crumbIssuer })
-
-  console.log(token)
 }
 
 
