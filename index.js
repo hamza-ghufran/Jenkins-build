@@ -19,9 +19,12 @@ function writeToFile(filename, data) {
 const api = {
   listJobs: () => '/api/json',
   // getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,duration,id,result]`,
-  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?depth=4&pretty=true`,
+  // getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?depth=4&pretty=true`,
+  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=actions[parameters[*],lastBuiltRevision[branch[*]],tags[*]],artifacts[fileName],changeSets[items[msg,comment,commitId,author[fullName],paths[*]]]`,
   singleWfRun: ({ jobName, jobId }) => `/job/${jobName}/${jobId}/wfapi/describe`,
-  readJob: ({ jobName }) => `/job/${jobName}/config.xml`
+  readJob: ({ jobName }) => `/job/${jobName}/config.xml`,
+  lastBuiltRevision: () => `/job/${jobName}/lastBuild/api/xml?xpath=//lastBuiltRevision/SHA1`,
+  xyz: ({ jobName, jobId }) => `job/${jobName}/${jobId}/api/json?pretty=true&tree=changeSet[items[comment,affectedPaths,commitId]]`
 }
 
 class Jenkins {
@@ -72,6 +75,13 @@ class Jenkins {
     const result = await this.getResource({ url })
     return result
   }
+
+  async xyz() {
+    const url = api.readJob(...arguments)
+
+    const result = await this.getResource({ url })
+    return result
+  }
 }
 
 async function test() {
@@ -87,10 +97,12 @@ async function test() {
     const jobConfig = await jenkins.readJob({ jobName: job.name })
     const singleWfRun = await jenkins.singleWfRun({ jobName: job.name, jobId: 7 })
     const getBuildStatus = await jenkins.getBuildStatus({ jobName: job.name })
+    const lastBuiltRevision = await jenkins.xyz({ jobName: job.name, jobId: 7 })
     // console.log(JSON.stringify(jobs.data))
     // console.log(JSON.stringify(job))
     // console.log(JSON.stringify(jobConfig.data))
     console.log((getBuildStatus.data))
+    console.log((lastBuiltRevision.data))
     // console.log(JSON.stringify(singleWfRun.data))
   }
   catch (e) {
@@ -98,7 +110,12 @@ async function test() {
   }
 }
 
-test().catch((e) => console.log(e))
+async function log(){
+  console.log('test')
+}
+
+log()
+// test().catch((e) => console.log(e))
 
 
 

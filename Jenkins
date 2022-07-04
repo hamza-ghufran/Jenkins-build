@@ -17,5 +17,11 @@ pipeline {
                 echo 'Last Stage complete'
             }
         }
+        stage('Test app') {
+            steps {
+                sh 'npm install'
+                sh 'node ./index.js'
+            }
+        }
     }
 }
