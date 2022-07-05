@@ -3,8 +3,15 @@ import { exec } from 'child_process'
 
 var totalCommits = 100
 
-function appendFileSync(filename, data) {
-  fs.appendFileSync(filename, data);
+async function appendFile(filename, data) {
+  return new Promise((res, rej) => {
+    fs.appendFile(filename, data, (err, data) => {
+      if (err) {
+        rej(err)
+      }
+      else res(data)
+    });
+  })
 }
 
 async function sh(cmd) {
@@ -22,11 +29,13 @@ async function sh(cmd) {
 function init() {
   var intv = setInterval(async () => {
     for (let i = totalCommits; i >= totalCommits - 10; i--) {
-      appendFileSync('./test', `${i}\n`)
-      const res = await sh('sh push.sh')
+      const res = await appendFile('./test', `${i}\n`)
+      console.log('appended', res)
+      const result = await sh('sh push.sh')
+      console.log('pushed', result)
     }
-    totalCommits -= 10
 
+    totalCommits -= 10
     if (!totalCommits) {
       clearInterval(intv)
       console.log('over')
