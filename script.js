@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { exec } from 'child_process'
 
-var totalCommits = 80
+var totalCommits = 200
 
 async function appendFile(filename, data) {
   return new Promise((res, rej) => {
