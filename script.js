@@ -28,22 +28,20 @@ async function sh(cmd) {
 
 function init() {
   var intv = setInterval(async () => {
-    setTimeout(async() => {
-      let res
-      for (let i = totalCommits; i >= totalCommits - 10; i--) {
-        res = await appendFile('./test', `${i}\n`)
-      }
-      console.log('appended', res)
-      const result = await sh('sh push.sh')
-      console.log('pushed', result)
-  
-      totalCommits -= 10
-      if (!totalCommits) {
-        clearInterval(intv)
-        console.log('over')
-      }
-    }, 500)
-    })
+    let res
+    for (let i = totalCommits; i >= totalCommits - 10; i--) {
+      res = await appendFile('./test', `${i}\n`)
+    }
+    console.log('appended', res)
+    const result = await sh('sh push.sh')
+    console.log('pushed', result)
+
+    totalCommits -= 10
+    if (!totalCommits) {
+      clearInterval(intv)
+      console.log('over')
+    }
+  }, 2000)
 }
 
 init()
