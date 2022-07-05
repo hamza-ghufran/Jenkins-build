@@ -41,7 +41,7 @@ function init() {
       clearInterval(intv)
       console.log('over')
     }
-  }, 2000)
+  }, 5000 * 2)
 }
 
 init()
