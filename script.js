@@ -20,12 +20,10 @@ async function sh(cmd) {
 }
 
 function init() {
-  var intv = setInterval(() => {
+  var intv = setInterval(async () => {
     for (let i = totalCommits; i >= totalCommits - 10; i--) {
       appendFileSync('./test', `${i}\n`)
-      /**
-       * git commit action
-       */
+      const res = await sh('sh push.sh')
     }
     totalCommits -= 10
 
@@ -33,7 +31,8 @@ function init() {
       clearInterval(intv)
       console.log('over')
     }
-  }, 5000)
+  }, 5000 * 2)
 }
 
-sh('sh push.sh').then((e) => console.log(e)).catch((e) => { console.log(e) })
+init()
+// sh('sh push.sh').then((e) => console.log(e)).catch((e) => { console.log(e) })
