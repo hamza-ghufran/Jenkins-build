@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { exec } from 'child_process'
 
-var totalCommits = 100
+var totalCommits = 80
 
 async function appendFile(filename, data) {
   return new Promise((res, rej) => {
@@ -28,12 +28,13 @@ async function sh(cmd) {
 
 function init() {
   var intv = setInterval(async () => {
+    let res
     for (let i = totalCommits; i >= totalCommits - 10; i--) {
-      const res = await appendFile('./test', `${i}\n`)
-      console.log('appended', res)
-      const result = await sh('sh push.sh')
-      console.log('pushed', result)
+      res = await appendFile('./test', `${i}\n`)
     }
+    console.log('appended', res)
+    const result = await sh('sh push.sh')
+    console.log('pushed', result)
 
     totalCommits -= 10
     if (!totalCommits) {

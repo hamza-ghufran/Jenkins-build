@@ -1,4 +1,4 @@
-git add .
+git add -A
 git commit -m "test"
 git status
 echo "Pushing data to remote server!!!"
