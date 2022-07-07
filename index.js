@@ -1,6 +1,5 @@
 import 'dotenv/config'
 
-import fs from 'fs'
 import axios from "axios"
 
 const BASE_URL = process.env.BASE_URL
@@ -9,113 +8,81 @@ const tokenValue = process.env.tokenValue
 
 axios.defaults.baseURL = BASE_URL;
 
-function writeToFile(filename, data) {
-  fs.writeFileSync(filename, JSON.stringify(data));
-}
-
-// GET Pipeline job run History.
-// {jenkins_url}/job/TEST/wfapi/runs
-
-const api = {
-  listJobs: () => '/api/json',
-  // getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=builds[number,status,timestamp,duration,id,result]`,
-  // getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?depth=4&pretty=true`,
-  getBuildStatus: ({ jobName }) => `/job/${jobName}/api/json?tree=actions[parameters[*],lastBuiltRevision[branch[*]],tags[*]],artifacts[fileName],changeSets[items[msg,comment,commitId,author[fullName],paths[*]]]`,
-  singleWfRun: ({ jobName, jobId }) => `/job/${jobName}/${jobId}/wfapi/describe`,
-  readJob: ({ jobName }) => `/job/${jobName}/config.xml`,
-  lastBuiltRevision: () => `/job/${jobName}/lastBuild/api/xml?xpath=//lastBuiltRevision/SHA1`,
-  xyz: ({ jobName, jobId }) => `job/${jobName}/${jobId}/api/json?pretty=true&tree=changeSet[items[comment,affectedPaths,commitId]]`
+const endpoints = {
+  getBuildStatus: ({ jobName, start, end }) => `/job/${jobName}/api/json?tree=allBuilds[number,status,timestamp,duration,id,result]{${start},${end}}`,
 }
 
 class Jenkins {
   constructor() {
     this.https = axios
-    this.token = tokenValue
+    this.config = {
+      auth: {
+        username: USER_NAME,
+        password: tokenValue
+      }
+    }
   }
 
   async getResource(params) {
     const { url } = params
 
-    const config = {
-      auth: {
-        username: USER_NAME,
-        password: this.token
-      }
-    }
-
-    const resp = await this.https.get(url, config)
-
+    const resp = await this.https.get(url, this.config)
     return resp
   }
 
-  async listJobs() {
-    const url = api.listJobs()
+  async* __pagination(params) {
+    const { api, args, options: { resourceKey } } = params;
 
-    const result = await this.getResource({ url })
-    return result
+    const limit = 100;
+    let start = 0;
+    let end = 100;
+
+    while (true) {
+      const records = await this.getResource({ url: api({ ...args, start, end }) });
+
+      yield records;
+      if (!records.data[resourceKey]?.length) return;
+
+      start = end + 1;
+      end += limit;
+    }
+  }
+
+  async *getBuildStatus({ jobName, ...rest }) {
+    const api = endpoints.getBuildStatus
+
+    yield* this.__pagination({ api, args: { jobName }, options: { ...rest } })
+  }
+}
+
+class JenkinsTool {
+  constructor() {
+    this.client = new Jenkins()
   }
 
   async getBuildStatus() {
-    const url = api.getBuildStatus(...arguments)
+    const resourceKey = 'allBuilds'
+    const api = this.client.getBuildStatus({ jobName: 'galaxy', resourceKey })
 
-    const result = await this.getResource({ url })
-    return result
-  }
+    let records = [];
+    let counter = 0
 
-  async singleWfRun() {
-    const url = api.singleWfRun(...arguments)
-
-    const result = await this.getResource({ url })
-    return result
-  }
-
-  async readJob() {
-    const url = api.readJob(...arguments)
-
-    const result = await this.getResource({ url })
-    return result
-  }
-
-  async xyz() {
-    const url = api.readJob(...arguments)
-
-    const result = await this.getResource({ url })
-    return result
+    for await (const record of api) {
+      counter++
+      records = records.concat(record.data[resourceKey]);
+    }
+    
+    console.log(records)
   }
 }
 
-async function test() {
-  const jenkins = new Jenkins()
+async function init() {
+  const j = new JenkinsTool()
 
-  const isWorkflow = 'org.jenkinsci.plugins.workflow.job.WorkflowJob'
-
-  try {
-    const jobs = await jenkins.listJobs()
-    const job = jobs.data.jobs.filter((jb) => jb._class === isWorkflow)[0]
-    // const job = jobs.data.jobs[0]
-
-    const jobConfig = await jenkins.readJob({ jobName: job.name })
-    const singleWfRun = await jenkins.singleWfRun({ jobName: job.name, jobId: 7 })
-    const getBuildStatus = await jenkins.getBuildStatus({ jobName: job.name })
-    const lastBuiltRevision = await jenkins.xyz({ jobName: job.name, jobId: 7 })
-    // console.log(JSON.stringify(jobs.data))
-    // console.log(JSON.stringify(job))
-    // console.log(JSON.stringify(jobConfig.data))
-    console.log((getBuildStatus.data))
-    console.log((lastBuiltRevision.data))
-    // console.log(JSON.stringify(singleWfRun.data))
-  }
-  catch (e) {
-    throw e
-  }
+  await j.getBuildStatus()
 }
 
-async function log(){
-  console.log('test')
-}
-
-log()
-// test().catch((e) => console.log(e))
+init().catch((e) => console.error(e))
 
 
 
