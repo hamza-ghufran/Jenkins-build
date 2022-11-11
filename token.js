@@ -85,6 +85,8 @@ async function init() {
     }
    */
   const token = await generateToken({ crumbIssuer })
+
+  console.log(token)
 }
 
 
