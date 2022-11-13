@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    tools {nodejs "NodeJs"}
     stages {
         stage('Pull latest') {
             steps {
