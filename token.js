@@ -41,8 +41,6 @@ async function generateToken(params) {
 
   console.log(crumbIssuer)
 
-  return
-
   try {
     const res = await axios.post(url, {}, {
       auth: {
