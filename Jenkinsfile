@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    tools {nodejs "NodeJs"}
     stages {
         stage('Pull latest') {
             steps {
@@ -15,6 +14,11 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo 'Last Stage complete'
+            }
+        }
+        stage('Test app') {
+            steps {
+                echo 'App tested'
             }
         }
     }
